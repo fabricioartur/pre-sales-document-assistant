@@ -1,0 +1,83 @@
+{
+  "executive_summary": {
+    "customer_overview": "Example customer.",
+    "opportunity_overview": "Example opportunity.",
+    "key_objectives": [
+      "Understand scope"
+    ],
+    "major_requirements": [
+      "Security review"
+    ],
+    "risks": [
+      "Timeline risk"
+    ],
+    "recommendations": [
+      "Confirm requirements"
+    ]
+  },
+  "document_type": "RFP",
+  "detected_language": "English",
+  "response_language": "English",
+  "requirements": [
+    {
+      "requirement_id": "REQ-001",
+      "category": "Technical",
+      "requirement_description": "Provide a secure integration approach.",
+      "mandatory_or_optional": "Mandatory",
+      "fit_assessment": "Needs review",
+      "notes": "Validate scope."
+    }
+  ],
+  "risks": [
+    {
+      "risk_id": "RISK-001",
+      "description": "Short timeline.",
+      "impact": "Delivery pressure.",
+      "probability": "Medium",
+      "mitigation": "Confirm milestones.",
+      "owner": "SE"
+    }
+  ],
+  "clarification_questions": [
+    {
+      "question": "What is the target go-live date?",
+      "reason": "Timeline planning.",
+      "owner": "Customer"
+    }
+  ],
+  "go_no_go": {
+    "recommendation": "CONDITIONAL GO",
+    "executive_recommendation": "Proceed after clarifications.",
+    "key_strengths": [
+      "Strong fit"
+    ],
+    "key_concerns": [
+      "Timeline"
+    ],
+    "recommended_next_actions": [
+      "Send questions"
+    ]
+  },
+  "solution_outline": {
+    "overview": "Generic solution approach.",
+    "approach": [
+      "Assess requirements"
+    ],
+    "architecture_components": [
+      "Integration layer"
+    ],
+    "delivery_considerations": [
+      "Phased rollout"
+    ],
+    "assumptions": [
+      "APIs are available"
+    ]
+  },
+  "run_metadata": {
+    "source_file": "input/rfp.pdf",
+    "detected_language": "English",
+    "document_type": "RFP",
+    "response_language": "English",
+    "model": "gpt-4.1-mini"
+  }
+}
