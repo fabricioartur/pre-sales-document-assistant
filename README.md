@@ -67,6 +67,31 @@ Each run creates:
 - `output/06_solution_outline.md`
 - `output/07_analysis.json`
 
+## Preview
+
+### Executive Summary
+
+![Executive Summary preview](docs/images/executive-summary.png)
+
+### Requirements Matrix
+
+![Requirements Matrix preview](docs/images/requirements-matrix.png)
+
+### Risk Register
+
+![Risk Register preview](docs/images/risk-register.png)
+
+### Go-No-Go Recommendation
+
+![Go-No-Go Recommendation preview](docs/images/go-no-go.png)
+
+To refresh these preview images, install the optional development dependency and run:
+
+```bash
+pip install -r requirements-dev.txt
+python tools/generate_readme_previews.py
+```
+
 ## Project Structure
 
 ```text
