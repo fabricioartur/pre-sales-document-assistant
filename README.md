@@ -96,12 +96,12 @@ This tool is designed to accelerate pre-sales review. It does not replace legal,
 
 ## Author
 
-Created by Fabricio Artur.
+Created by Fabricio Puliafico Artur.
 
 - GitHub: [fabricioartur](https://github.com/fabricioartur)
 
 ## License
 
-Copyright (c) 2026 Fabricio Artur.
+Copyright (c) 2026 Fabricio Puliafico Artur.
 
 This project is released under the MIT License. See [LICENSE](LICENSE) for details.
