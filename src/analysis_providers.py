@@ -158,9 +158,13 @@ class MockAnalysisProvider:
 class OpenAIAnalysisProvider:
     name = "openai"
 
-    def __init__(self, *, api_key: str, model: str) -> None:
+    _MAX_RETRIES = 3
+    _RETRY_BASE_DELAY = 2.0
+
+    def __init__(self, *, api_key: str, model: str, reasoning_effort: str | None = None) -> None:
         self.api_key = api_key
         self.model = model
+        self.reasoning_effort = reasoning_effort
 
     def analyze(
         self,
@@ -170,14 +174,16 @@ class OpenAIAnalysisProvider:
         detected_language: str,
         response_language: str,
     ) -> AnalysisResult:
+        import time
+
         try:
-            from openai import OpenAI
+            from openai import APIConnectionError, APIStatusError, OpenAI, RateLimitError
         except ImportError as exc:
             raise AnalysisError(
                 "The openai package is not installed. Run: pip install -r requirements.txt"
             ) from exc
 
-        client = OpenAI(api_key=self.api_key)
+        client = OpenAI(api_key=self.api_key, timeout=60.0)
         prompt = build_user_prompt(
             text=text,
             document_type=document_type,
@@ -185,29 +191,57 @@ class OpenAIAnalysisProvider:
             response_language=response_language,
         )
 
-        try:
-            response = client.chat.completions.create(
-                model=self.model,
-                messages=[
-                    {"role": "system", "content": SYSTEM_PROMPT},
-                    {"role": "user", "content": prompt},
-                ],
-                response_format={"type": "json_object"},
-                temperature=0.2,
-            )
-        except Exception as exc:
-            raise AnalysisError(f"OpenAI API request failed: {exc}") from exc
+        extra_kwargs: dict[str, object] = {}
+        if self.reasoning_effort is not None:
+            extra_kwargs["reasoning"] = {"effort": self.reasoning_effort}
+        else:
+            extra_kwargs["temperature"] = 0.2
 
-        content = response.choices[0].message.content
-        if not content:
-            raise AnalysisError("OpenAI API returned an empty response.")
+        last_exc: Exception | None = None
+        for attempt in range(self._MAX_RETRIES):
+            try:
+                response = client.responses.create(
+                    model=self.model,
+                    input=[
+                        {"role": "system", "content": SYSTEM_PROMPT},
+                        {"role": "user", "content": prompt},
+                    ],
+                    **extra_kwargs,
+                )
+                content = response.output_text.strip()
+                if not content:
+                    raise AnalysisError("OpenAI returned an empty response.")
 
-        try:
-            parsed = json.loads(content)
-        except json.JSONDecodeError as exc:
-            raise AnalysisError("OpenAI API returned invalid JSON.") from exc
+                try:
+                    return json.loads(content)
+                except json.JSONDecodeError as exc:
+                    raise AnalysisError("OpenAI returned invalid JSON.") from exc
 
-        return parsed
+            except RateLimitError as exc:
+                last_exc = exc
+                if attempt < self._MAX_RETRIES - 1:
+                    delay = self._RETRY_BASE_DELAY * (2 ** attempt)
+                    time.sleep(delay)
+
+            except APIConnectionError as exc:
+                raise AnalysisError(
+                    "Could not connect to the OpenAI API. Check your network connection."
+                ) from exc
+
+            except APIStatusError as exc:
+                raise AnalysisError(
+                    f"OpenAI API returned an error: HTTP {exc.status_code}."
+                ) from exc
+
+            except AnalysisError:
+                raise
+
+            except Exception as exc:
+                raise AnalysisError(f"Unexpected API failure: {exc}") from exc
+
+        raise AnalysisError(
+            f"OpenAI rate limit reached after {self._MAX_RETRIES} attempts. Wait a moment and try again."
+        ) from last_exc
 
 
 def build_analysis_provider(config: AppConfig) -> AnalysisProvider:
@@ -218,5 +252,9 @@ def build_analysis_provider(config: AppConfig) -> AnalysisProvider:
             raise AnalysisError(
                 "OPENAI_API_KEY is required when the openai provider is selected."
             )
-        return OpenAIAnalysisProvider(api_key=config.api_key, model=config.model)
+        return OpenAIAnalysisProvider(
+            api_key=config.api_key,
+            model=config.model,
+            reasoning_effort=config.reasoning_effort,
+        )
     raise AnalysisError(f"Unsupported analysis provider: {config.provider}")

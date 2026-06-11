@@ -22,8 +22,9 @@ Target users:
 - Detects document language: English, Portuguese, or Spanish
 - Classifies document type: RFP, RFI, Government Tender, or Unknown
 - Detects the required response language
-- Runs by default with a local mock analysis provider for Milestone 1 validation
-- Keeps an optional OpenAI provider as a future extension point
+- Runs by default with a local mock analysis provider (no API key required)
+- OpenAI provider using the Responses API with retry and exponential backoff
+- `--reasoning` flag with four effort levels matching the OpenAI Codex interface
 - Generates structured output in JSON, Markdown, and Excel
 - Handles common errors such as missing files, non-PDF input, empty PDFs, missing API keys, unavailable dependencies, API failures, and invalid JSON returned by the model
 
@@ -33,9 +34,9 @@ Target users:
 pip install -r requirements.txt
 ```
 
-Milestone 1 does not require a `.env` file or OpenAI credentials.
+The mock provider requires no `.env` file or OpenAI credentials.
 
-To test the future OpenAI provider, copy `.env.example` to `.env` and set:
+To use the OpenAI provider, copy `.env.example` to `.env` and set:
 
 ```text
 OPENAI_API_KEY=your_api_key_here
@@ -45,15 +46,39 @@ ANALYSIS_PROVIDER=openai
 ## Usage
 
 ```bash
-python main.py input/rfp.pdf
+# Demo mode — no API key required
+python main.py input/rfp.pdf --provider mock
+
+# Standard run with default model
+python main.py input/rfp.pdf --provider openai
+
+# High-quality analysis for a complex tender
+python main.py input/rfp.pdf --provider openai --model gpt-5.4
+
+# Strategic account — maximum depth
+python main.py input/rfp.pdf --provider openai --model gpt-5.5 --reasoning extra_high
 ```
 
-Optional arguments:
+## Model Selection
 
-```bash
-python main.py input/rfp.pdf --output-dir output
-python main.py input/rfp.pdf --provider openai --model gpt-4.1-mini
-```
+| Model | Cost (input / output per MTok) | Use When |
+|-------|-------------------------------|----------|
+| `gpt-5.4-mini` *(default)* | $0.75 / $4.50 | Routine RFP analysis, daily use — fast and cost-efficient |
+| `gpt-5.4` | $2.50 / $15.00 | Complex enterprise tenders and final deliverables |
+| `gpt-5.5` | $5.00 / $30.00 | Strategic accounts, board-level reports, highest output quality |
+
+### Reasoning Effort
+
+GPT-5 models support a `--reasoning` flag that controls how deeply the model thinks before producing output.
+
+| Level | Use When |
+|-------|----------|
+| `low` | Fast summaries and routine documents — lowest cost |
+| `medium` | Balanced quality for standard enterprise tenders |
+| `high` | Complex requirements, technical architecture, compliance-heavy scenarios |
+| `extra_high` | Strategic accounts, final proposals, maximum output quality |
+
+> **Note:** When `--reasoning` is set, `temperature` is disabled — reasoning models control their own sampling internally.
 
 ## Outputs
 

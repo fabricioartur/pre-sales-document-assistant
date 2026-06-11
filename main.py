@@ -6,7 +6,7 @@ import logging
 import sys
 from pathlib import Path
 
-from src.config import AppConfig, ConfigError
+from src.config import AppConfig, ConfigError, MODEL_CHOICES, REASONING_CHOICES, DEFAULT_MODEL
 from src.detectors import classify_document_type, detect_language, detect_response_language
 from src.analysis_providers import AnalysisError, build_analysis_provider
 from src.output_writer import write_outputs
@@ -26,16 +26,33 @@ def build_parser() -> argparse.ArgumentParser:
         default="output",
         help="Directory where the numbered PRD outputs will be written.",
     )
+    model_help = "  |  ".join(f"{m}: {d}" for m, d in MODEL_CHOICES.items())
     parser.add_argument(
         "--model",
+        choices=list(MODEL_CHOICES),
         default=None,
-        help="OpenAI model override. Used only by the openai provider.",
+        metavar="MODEL",
+        help=(
+            f"OpenAI model to use (default: {DEFAULT_MODEL}). "
+            f"Overrides OPENAI_MODEL env var.\n{model_help}"
+        ),
     )
     parser.add_argument(
         "--provider",
         choices=["mock", "openai"],
         default=None,
         help="Analysis provider to use. Defaults to ANALYSIS_PROVIDER or mock.",
+    )
+    parser.add_argument(
+        "--reasoning",
+        choices=list(REASONING_CHOICES),
+        default=None,
+        metavar="LEVEL",
+        help=(
+            "Reasoning effort for GPT-5 models: low | medium | high | extra_high. "
+            "Higher effort produces deeper analysis at increased cost and latency. "
+            "When set, temperature is disabled (reasoning models control their own sampling)."
+        ),
     )
     return parser
 
@@ -50,6 +67,7 @@ def main() -> int:
         config = AppConfig.from_env(
             provider_override=args.provider,
             model_override=args.model,
+            reasoning_override=args.reasoning,
         )
         provider = build_analysis_provider(config)
         LOGGER.info("Extracting text from PDF.")
