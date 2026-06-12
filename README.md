@@ -6,6 +6,10 @@ Built for Sales Engineers, Solutions Engineers, Solution Architects, and Bid Man
 
 ---
 
+> **By the author of [Manual do Engenheiro de Pré-Vendas](https://www.amazon.com/dp/B0H2FX2YXD)** — available on Amazon US (print) and [Amazon Brazil](https://www.amazon.com.br/dp/B0H2791DC3) (Kindle).
+
+---
+
 ## The Problem It Solves
 
 When a customer sends an RFP, RFI, or government tender, a senior SE typically spends **3–6 hours** to:
